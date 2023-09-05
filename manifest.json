@@ -32,6 +32,9 @@
             "run_at": "document_idle",
             "js": [
                 "content-script.js"
+            ],
+            "css": [
+                "app-modal-styles.css"
             ]
         }
     ]

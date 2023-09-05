@@ -1,0 +1,30 @@
+#myDialog {
+    width: 40rem; 
+    height: 30rem; 
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#myDialog-footer {
+    display: flex;
+    justify-content: end;
+}
+
+#close-button {
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    background-color: #F7F7F7;
+}
+
+#close-button:hover {
+    background-color: #EBECF0;
+}
+
+.selected-message {
+    padding: 0.5rem;
+    margin: 0.5rem;
+    background-color: #DDE6E2;
+}
