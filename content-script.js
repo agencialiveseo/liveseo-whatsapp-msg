@@ -1,12 +1,31 @@
-function waitElementOnScreen(selector, callback, interval = 200)
-  {let ckInterval = setInterval(function(){
-    if(document.querySelectorAll(selector).length > 0) {
-      callback()
+/**
+ * Aguarda a presença de elementos correspondentes ao seletor especificado na tela
+ * e executa uma função de retorno quando os elementos estão presentes.
+ * @param {string} selector - O seletor CSS que identifica os elementos desejados.
+ * @param {Function} callback - A função de retorno que será executada quando os elementos estiverem presentes.
+ * @param {number} [interval=200] - O intervalo de tempo (em milissegundos) entre as verificações de presença dos elementos.
+ * @returns {void}
+ */
+function waitElementOnScreen(selector, callback, interval = 200) {
+  // Configura um intervalo que verifica a presença dos elementos
+  let ckInterval = setInterval(function() {
+    // Verifica se há elementos correspondentes ao seletor na página
+    if (document.querySelectorAll(selector).length > 0) {
+      // Se os elementos estiverem presentes, execute a função de retorno
+      callback();
+      // Limpa o intervalo para parar de verificar a presença dos elementos
       clearInterval(ckInterval);
     }
   }, interval);
 }
 
+/**
+ * Função que permite observar mudanças no DOM de um elemento HTML.
+ * @param {HTMLElement} obj - O elemento HTML a ser observado quanto a mudanças no DOM.
+ * @param {Function} callback - A função de retorno a ser chamada quando ocorrerem mudanças no DOM.
+ * @returns {MutationObserver|void} - Retorna um objeto MutationObserver se suportado pelo navegador, 
+ * caso contrário, não retorna nada (undefined).
+ */
 var observeDOM = (function(){
     var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
   
@@ -31,6 +50,11 @@ var observeDOM = (function(){
   }
 )();
 
+/**
+ * Adiciona um botão Enviar para o app dentro da barra do whatsapp web.
+ * @param {HTMLElement} wppMain - O elemento HTML ao qual o menu será adicionado no rodapé.
+ * @returns {void}
+ */
 function addMenuOnFooter(wppMain) {
   if(wppMain && !wppMain.querySelector('footer').childNodes.length ){
     
@@ -43,6 +67,10 @@ function addMenuOnFooter(wppMain) {
   }
 }
 
+/**
+ * Cria um elemento de ação 'Enviar para o app' e configura seu comportamento.
+ * @returns {HTMLElement} - O elemento HTML criado com o texto 'Enviar para o app' e funcionalidade de clique.
+ */
 function createSendToApp() {
   const newAction = document.createElement('span')
   newAction.textContent = 'Enviar para o app'
@@ -55,100 +83,55 @@ function createSendToApp() {
 waitElementOnScreen(
   '#main', 
   () => {
-    let newModal = createDialog()
-    document.getElementById('app').appendChild(newModal)
+    let newDialog = createDialog()
+    document.getElementById('app').appendChild(newDialog)
     observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
 )
 
-  
-function debounce(func, timeout = 300){
-  let timer;
-  return (...args) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => { func.apply(this, args); }, timeout);
-  };
-}
-  
-function addMenuToApp(mutation, observer){
-  console.log(mutation)
-    // precisa arrumar em clicks em conversas ou canto direito superior
-    // let mutatedChild = mutation[0].target;
-    
-    // if(mutatedChild.nodeName != "SPAN") return;
-    
-    // let lis = mutatedChild.childNodes[0].childNodes[0].childNodes[0];
+const projects = [
+  {value: 'a', text: 'projeto a'}, 
+  {value: 'b', text: 'projeto b'}, 
+  {value: 'c', text: 'projeto c'}
+];
 
-    // let li = lis.childNodes[0];
+const serviceResponsible = [
+  {value: '#atendimento', text: '#atendimento'},
+  {value: '#spaceship', text:'#spaceship'}
+]
 
-    // li.addEventListener("click", function(event){
-    //     console.log("cricou");
-    // })
-    
-    // let div = li.childNodes[0];
-
-    // div = div.cloneNode();
-    // div.textContent = "Enviar para o app";
-    // li = li.cloneNode();
-
-    // li.appendChild(div);
-    
-    // lis.appendChild(li)
-}
-
-
-
-//observeDOM(document.querySelector("#app"), debounce(addMenuToApp, 200));
-
-//observeDOM(document.getElementById('main'), () => addMenuOnFooter(document.getElementById('main')));  
-
-  
-  ///////////////////////////
-  // mensagens selecionadas:
-  ///////////////////////////
-  
-function getSelectedMessages() {
-  let itens = document.querySelectorAll("div[role='application'] div[role='row']")
-  let selected = [];
-  itens.forEach(function(item){
-      let ckbox = item.querySelector("input[type='checkbox']:checked");
-      if(!ckbox) return;
-      selected.push(item)
-  })
-
-  let selectedMessages = []
-
-  for(let i in selected){
-    let message = selected[i].querySelector('.copyable-text')
-    let time = message.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
-    let messageText = message.querySelector(".selectable-text").textContent;
-    let name = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
-    let img = ''
-    // const messageImgs = message.querySelectorAll("img")
-    // if(messageImgs.length > 0) {
-    //   img = messageImgs[1].getAttribute('src')
-    // }
-
-    selectedMessages.push({time, name, messageText})
-  }
-  console.log(selectedMessages)
-  createMessages(selectedMessages)
-  myDialog.showModal()
-}
+//////////////////////////////////////////////////
+////Funções de criação do modal e suas funções////
+//////////////////////////////////////////////////
 
 function createDialog() {
   const dialog = document.createElement('dialog')
-  const header = document.createElement('header')
   dialog.id = 'myDialog'
-  header.id = 'myDialog-header'
-  header.textContent = 'teste'
-  dialog.appendChild(header)
+  dialog.appendChild(createDialogHeader())
+  dialog.appendChild(createDialogBody())
   dialog.appendChild(createDialogFooter())
   return dialog
+}
+
+function createDialogHeader() {
+  const header = document.createElement('header')
+  header.id = 'myDialog-header'
+  header.textContent = 'Mensagens selecionadas'
+  return header
+}
+
+function createDialogBody() {
+  const body = document.createElement('div')
+  body.id = 'myDialog-body'
+  body.appendChild(createTitleInput())
+  body.appendChild(createDialogSelect(projects, body, 'project-select'))
+  body.appendChild(createDialogSelect(serviceResponsible, body, 'service-select'))
+  return body
 }
 
 function createDialogFooter() {
   const footer = document.createElement('footer')
   footer.id = 'myDialog-footer'
+  footer.appendChild(createSaveTaskButton())
   footer.appendChild(createCloseDialog())
   return footer
 }
@@ -157,11 +140,20 @@ function createCloseDialog() {
   const closeButton = document.createElement('button')
   closeButton.id = 'close-button'
   closeButton.textContent = 'Fechar'
-  closeButton.addEventListener('click', () => myDialog.close())
+  closeButton.addEventListener('click', () => closeMyDialog())
+  return closeButton
+}
+
+function createSaveTaskButton() {
+  const closeButton = document.createElement('button')
+  closeButton.id = 'save-button'
+  closeButton.textContent = 'Criar tarefa'
+  closeButton.addEventListener('click', () => createTask())
   return closeButton
 }
 
 function createMessages(selectedMessages) {
+  var dialog = document.getElementById('myDialog-body')
   for(let item of selectedMessages) {
     var messageBody = document.createElement('div')
     messageBody.className = 'selected-message'
@@ -170,8 +162,108 @@ function createMessages(selectedMessages) {
     messageOrigin.innerHTML = item.time + ' - ' + item.name
     messageBody.appendChild(messageOrigin)
     messageBody.appendChild(messageText)
-    var dialog = document.getElementById('myDialog')
-    var header = dialog.firstChild
-    header.after(messageBody)
+    dialog.append(messageBody)
   }
 }
+
+function createDialogSelect(options, elementId, name) {
+  var selectElement = document.createElement("select");
+  selectElement.id = name
+  // Use o loop for...of para iterar pelo array de opções
+  for (var option of options) {
+    // Crie um elemento 'option' para cada opção no array
+    var optionElement = document.createElement("option");
+    optionElement.value = option.value
+    optionElement.text = option.text
+
+    // Adicione o elemento 'option' ao elemento 'select'
+    selectElement.appendChild(optionElement);
+  }
+  return selectElement
+}
+
+function createTitleInput() {
+  var inputElement = document.createElement('input');
+  // Set the type attribute to "text"
+  inputElement.type = 'text';
+  inputElement.id = 'task-title-input'
+  // Set a placeholder text
+  inputElement.placeholder = 'Título da tarefa';
+  // Set an initial value (optional)
+  inputElement.value = '';
+  return inputElement
+}
+
+function closeMyDialog() {
+  myDialog.close()
+  var dialog = document.getElementById('myDialog')
+  dialog.remove()
+  let newDialog = createDialog()
+  document.getElementById('app').appendChild(newDialog)
+}
+
+async function createTask() {
+  const values = getSelectedValues()
+  alert(values.inputValue)
+  let projects = await retrieveProjects()
+  // closeMyDialog()
+}
+
+  ///////////////////////////
+  // mensagens selecionadas:
+  ///////////////////////////
+  
+  function getSelectedMessages() {
+    let itens = document.querySelectorAll("div[role='application'] div[role='row']")
+    let selected = [];
+    itens.forEach(function(item){
+        let ckbox = item.querySelector("input[type='checkbox']:checked");
+        if(!ckbox) return;
+        selected.push(item)
+    })
+  
+    let selectedMessages = []
+  
+    for(let i in selected){
+      let message = selected[i].querySelector('.copyable-text')
+      let time = message.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
+      let messageText = message.querySelector(".selectable-text").textContent;
+      let name = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
+      let img = ''
+      // const messageImgs = message.querySelectorAll("img")
+      // if(messageImgs.length > 0) {
+      //   img = messageImgs[1].getAttribute('src')
+      // }
+  
+      selectedMessages.push({time, name, messageText})
+    }
+    createMessages(selectedMessages)
+    chrome.runtime.sendMessage('get-project-data', (response) => {
+      // Got an asynchronous response with the data from the service worker
+      console.log('received project data', response);
+    });
+    myDialog.showModal()
+  }
+
+
+function getSelectedValues() {
+  var inputElement = document.getElementById("task-title-input");
+  var inputValue = inputElement.value;
+
+  var selectProjectElement = document.getElementById("project-select");
+  var selectedProjectOption = selectProjectElement.options[selectProjectElement.selectedIndex];
+  var selectedProject = selectedProjectOption.value;
+
+  var selectServiceElement = document.getElementById("service-select");
+  var selectedServiceOption = selectServiceElement.options[selectServiceElement.selectedIndex];
+  var selectedService = selectedServiceOption.value;
+
+  return {inputValue, selectedProject, selectedService}
+}
+
+
+chrome.runtime.onConnect.addListener(port => {
+  port.onMessage.addListener(message => {
+      console.log(message)
+  })
+})
