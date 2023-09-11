@@ -45,44 +45,48 @@ let connCookie = null;
 //------------------------------************************----------------------
 //------------------------------LISTENER CONTENT------------------------------
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-    console.log(message, sender, sendResponse);
-    switch(message.ation) {
-        case 'setupCookie':
+    switch(message.action) {
+        case 'getProjects':
             const [cookieErr, cookie] = await retrieveCookie();
             if(cookieErr) return;
-            connCookie = cookie.value;
-            sendResponse({ cookie: connCookie });
-            console.log(connCookie)
-            break;
+            
+            const { tab } = sender;
+            tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-extension-tab${tab.id}` });
 
+            try {
+                const projects = await retrieveProjects(cookie)
+
+                tabPort.postMessage({
+                    action: 'setProjects',
+                    data: projects
+                });
+                //displayIconColor(tab.id);
+            } catch (error) {
+                tabPort.postMessage({ action: 'error' });
+                //displayIconPb(tab.id);
+            }
     }
 
     return;
 }); 
 
 
+async function retrieveProjects(cookie) {
+    try {
+        const response = await fetch(`${apiUrl}/projects/list?resume=1`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Cookie: cookie,
+            },
+        });
 
-
-
-/*
-chrome.runtime.onConnect.addListener(async function(port) {
-    console.assert(port.name === "content-script");
-    const [cookieErr, cookie] = await retrieveCookie();
-    console.log(cookie)
-      // Process the message or send a response if needed
-    
-  });
-*/
-
-// async function retrieveCookie() {
-//     return new Promise((resolve, reject) => {
-//         chrome.cookies.getAll({}, (cookie) => {
-//             if (!cookie) reject([true, null]);
-
-//             resolve([null, cookie]);
-//         });
-//     });
-// }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        throw new Error('Failed to retrieve projects');
+    }
+}
 
 async function retrieveCookie() {
     return new Promise((resolve, reject) => {
@@ -93,3 +97,23 @@ async function retrieveCookie() {
         });
     });
 }
+
+
+
+
+function displayIconColor(tabId){
+    let icon_path = {
+        path: {
+            16: '/icons/icon_16.png',
+            32: '/icons/icon_32.png',
+            32: '/icons/icon_48.png',
+            128: '/icons/icon_128.png'
+        }
+    }
+    
+    if(tabId){
+        icon_path.tabId = tabId;
+    }
+    chrome.action.setIcon(icon_path, null)
+}
+

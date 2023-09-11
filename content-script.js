@@ -83,13 +83,25 @@ function createSendToApp() {
 
 // sendAction("action", {message:1}, console.log)
 // sendAction("action", console.log)
-function sendAction(action, message, callback) {
-  if(typeof message == 'function'){
-    callback = message;
-    message = null;
-  }
-  chrome.runtime.sendMessage({action, message}, callback)
+function sendAction(action, data) {
+    if(typeof data == 'function'){
+        callback = data;
+        data = null;
+    }
+
+    chrome.runtime.sendMessage(null, {action, data})
 }
+
+chrome.runtime.onConnect.addListener(port => {
+    port.onMessage.addListener(message => {
+        switch(message.action) {
+            case 'setProjects':
+                console.log('setProjects', message.data);
+            break;
+        }
+    })
+})
+
 
 
 waitElementOnScreen(
@@ -98,9 +110,8 @@ waitElementOnScreen(
     let newDialog = createDialog()
     //const port = chrome.runtime.connect({ name: "content-script" });
     
-    sendAction("setupCookie", console.log)
-
-    getProjectsFromServer().then(console.info);
+    sendAction("getProjects");
+    
 
     document.getElementById('app').appendChild(newDialog)
     observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
