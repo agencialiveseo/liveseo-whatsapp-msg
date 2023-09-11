@@ -10,7 +10,8 @@
         "128": "icons/icon_128.png"
     },
     "background": {
-        "service_worker": "service-worker.js"
+        "service_worker": "service-worker.js",
+        "type": "module"
     },
     "action": {
         "default_title": "liveSEO CS",
@@ -18,10 +19,12 @@
     },
     "permissions": [
         "storage", 
-        "cookies"
+        "cookies",
+        "tabs",
+        "activeTab"
     ],
     "host_permissions": [
-        "https://app.liveseo.com.br/*",
+        "*://*app.liveseo.com.br/",
         "https://qa.app.liveseo.com.br/*",
         "https://*.google.com/*",
         "http://localhost:3000/*"
@@ -31,7 +34,6 @@
             "matches": [
                 "<all_urls>"
             ],
-            "run_at": "document_idle",
             "js": [
                 "content-script.js"
             ],
@@ -39,5 +41,8 @@
                 "app-modal-styles.css"
             ]
         }
-    ]
+    ],
+    "content_security_policy":{
+        "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com;"
+    }
 }

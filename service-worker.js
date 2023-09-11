@@ -38,16 +38,24 @@ let apiUrl = environmentMap[environment].api;
 let count = 0;
 let counterTimeout;
 
-chrome.runtime.onConnect.addListener((port) => {
-    console.log('teste')
-})
-// chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
-//     const [cookieErr, cookie] = await retrieveCookie();
+chrome.runtime.onConnect.addListener(async function(port) {
+    console.assert(port.name === "content-script");
+    const [cookieErr, cookie] = await retrieveCookie();
+    console.log(cookie)
+      // Process the message or send a response if needed
+    
+  });
 
-//     if (message === 'get-project-data') {
-//       sendResponse (cookie)
-//     }
-// });
+
+// async function retrieveCookie() {
+//     return new Promise((resolve, reject) => {
+//         chrome.cookies.getAll({}, (cookie) => {
+//             if (!cookie) reject([true, null]);
+
+//             resolve([null, cookie]);
+//         });
+//     });
+// }
 
 async function retrieveCookie() {
     return new Promise((resolve, reject) => {

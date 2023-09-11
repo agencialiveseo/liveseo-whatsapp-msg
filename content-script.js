@@ -76,7 +76,7 @@ function createSendToApp() {
   newAction.textContent = 'Enviar para o app'
   newAction.id = 'send-to-app'
   newAction.style.cssText = 'cursor: pointer; margin: 1rem;'
-  newAction.addEventListener('click', () => getSelectedMessages())
+  newAction.addEventListener('click', () => startSendMessagesToApp())
   return newAction
 }
 
@@ -84,6 +84,8 @@ waitElementOnScreen(
   '#main', 
   () => {
     let newDialog = createDialog()
+    const port = chrome.runtime.connect({ name: "content-script" });
+    
     document.getElementById('app').appendChild(newDialog)
     observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
 )
@@ -213,7 +215,7 @@ async function createTask() {
   // mensagens selecionadas:
   ///////////////////////////
   
-  function getSelectedMessages() {
+  function startSendMessagesToApp() {
     let itens = document.querySelectorAll("div[role='application'] div[role='row']")
     let selected = [];
     itens.forEach(function(item){
@@ -238,10 +240,11 @@ async function createTask() {
       selectedMessages.push({time, name, messageText})
     }
     createMessages(selectedMessages)
-    chrome.runtime.sendMessage('get-project-data', (response) => {
-      // Got an asynchronous response with the data from the service worker
-      console.log('received project data', response);
-    });
+    // chrome.runtime.sendMessage('get-project-data', (response) => {
+    //   // Got an asynchronous response with the data from the service worker
+    //   console.log('received project data', response);
+    // });
+    // fetchCookie()
     myDialog.showModal()
   }
 
@@ -262,8 +265,20 @@ function getSelectedValues() {
 }
 
 
-chrome.runtime.onConnect.addListener(port => {
-  port.onMessage.addListener(message => {
-      console.log(message)
-  })
-})
+// chrome.runtime.onConnect.addListener(port => {
+//   port.onMessage.addListener(message => {
+//       console.log(message)
+//   })
+// })
+
+
+function fetchCookie() {
+  chrome.tabs.query({}, function (tabs) {
+    // const activeTab = tabs[0];
+    // chrome.cookies.getAll({ url: activeTab.url }, function (cookies) {
+      // Process the cookies, maybe find the one you need
+      // Here, we are logging all cookies to the console
+      console.log(tabs);
+    });
+  // });
+}
