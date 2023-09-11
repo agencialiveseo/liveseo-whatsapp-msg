@@ -57,7 +57,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 const projects = await retrieveProjects(cookie)
 
                 tabPort.postMessage({
-                    action: 'setProjects',
+                    action: message.action,
                     data: projects
                 });
                 //displayIconColor(tab.id);

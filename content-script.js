@@ -81,12 +81,44 @@ function createSendToApp() {
 }
 
 
+
+
+let actions = {};
+
+// sendActionAsync("action", {message:1}).then(console.log)
+// await sendActionAsync("action");
+function sendActionAsync(action, data) {
+    return new Promise(resolve => {
+        sendAction(action, data, resolve);
+    })
+}
+
 // sendAction("action", {message:1}, console.log)
 // sendAction("action", console.log)
-function sendAction(action, data) {
+function sendAction(action, data, callback) {
     if(typeof data == 'function'){
         callback = data;
         data = null;
+    }
+
+    if(callback){
+        
+        // register our callback on actions with our action name
+        actions[action] = {
+            callback,
+            destroy() {
+                clearInterval(actions[action].timeout)
+                delete actions[action];
+            },
+            // set timeout for requests
+            timeout: setTimeout(() => {
+                if(actions[action]){
+                    actions[action]({error: "timeout"});
+                    delete actions[action];
+                }
+            }, 60000)
+        };
+
     }
 
     chrome.runtime.sendMessage(null, {action, data})
@@ -94,11 +126,13 @@ function sendAction(action, data) {
 
 chrome.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(message => {
-        switch(message.action) {
-            case 'setProjects':
-                console.log('setProjects', message.data);
-            break;
+
+        if(message.action && actions[message.action]){
+            actions[message.action].callback(message.data);
+            actions[message.action].destroy();
+            return;
         }
+
     })
 })
 
@@ -106,11 +140,16 @@ chrome.runtime.onConnect.addListener(port => {
 
 waitElementOnScreen(
   '#main', 
-  () => {
+  async () => {
     let newDialog = createDialog()
     //const port = chrome.runtime.connect({ name: "content-script" });
     
-    sendAction("getProjects");
+    let projects = await sendActionAsync("getProjects");
+
+    console.log("awaiter getProjects", projects);
+    // sendAction("getProjects", (data) => {
+    //     console.log("meu callback fora do padrão", data)
+    // });
     
 
     document.getElementById('app').appendChild(newDialog)
