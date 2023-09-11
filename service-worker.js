@@ -38,6 +38,33 @@ let apiUrl = environmentMap[environment].api;
 let count = 0;
 let counterTimeout;
 
+let connCookie = null;
+
+
+
+//------------------------------************************----------------------
+//------------------------------LISTENER CONTENT------------------------------
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    console.log(message, sender, sendResponse);
+    switch(message.ation) {
+        case 'setupCookie':
+            const [cookieErr, cookie] = await retrieveCookie();
+            if(cookieErr) return;
+            connCookie = cookie.value;
+            sendResponse({ cookie: connCookie });
+            console.log(connCookie)
+            break;
+
+    }
+
+    return;
+}); 
+
+
+
+
+
+/*
 chrome.runtime.onConnect.addListener(async function(port) {
     console.assert(port.name === "content-script");
     const [cookieErr, cookie] = await retrieveCookie();
@@ -45,7 +72,7 @@ chrome.runtime.onConnect.addListener(async function(port) {
       // Process the message or send a response if needed
     
   });
-
+*/
 
 // async function retrieveCookie() {
 //     return new Promise((resolve, reject) => {

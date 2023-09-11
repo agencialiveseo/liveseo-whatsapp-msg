@@ -80,12 +80,28 @@ function createSendToApp() {
   return newAction
 }
 
+
+// sendAction("action", {message:1}, console.log)
+// sendAction("action", console.log)
+function sendAction(action, message, callback) {
+  if(typeof message == 'function'){
+    callback = message;
+    message = null;
+  }
+  chrome.runtime.sendMessage({action, message}, callback)
+}
+
+
 waitElementOnScreen(
   '#main', 
   () => {
     let newDialog = createDialog()
-    const port = chrome.runtime.connect({ name: "content-script" });
+    //const port = chrome.runtime.connect({ name: "content-script" });
     
+    sendAction("setupCookie", console.log)
+
+    getProjectsFromServer().then(console.info);
+
     document.getElementById('app').appendChild(newDialog)
     observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
 )
@@ -264,6 +280,22 @@ function getSelectedValues() {
   return {inputValue, selectedProject, selectedService}
 }
 
+
+function getProjectsFromServer(){
+  return new Promise((resolve, reject) => {
+    sendAction("getProjects", resolve);
+  });
+}
+
+
+function createTaskFromModal(){
+  // todo: get all data from modal
+  let data = {
+    mock: "true"
+  }
+
+
+}
 
 // chrome.runtime.onConnect.addListener(port => {
 //   port.onMessage.addListener(message => {
