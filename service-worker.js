@@ -60,13 +60,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                     action: message.action,
                     data: projects
                 });
-                //displayIconColor(tab.id);
             } catch (error) {
                 tabPort.postMessage({ action: 'error' });
-                //displayIconPb(tab.id);
             }
     }
-
     return;
 }); 
 
@@ -80,7 +77,6 @@ async function retrieveProjects(cookie) {
                 Cookie: cookie,
             },
         });
-
         const data = await response.json();
         return data;
     } catch (error) {
@@ -97,23 +93,3 @@ async function retrieveCookie() {
         });
     });
 }
-
-
-
-
-function displayIconColor(tabId){
-    let icon_path = {
-        path: {
-            16: '/icons/icon_16.png',
-            32: '/icons/icon_32.png',
-            32: '/icons/icon_48.png',
-            128: '/icons/icon_128.png'
-        }
-    }
-    
-    if(tabId){
-        icon_path.tabId = tabId;
-    }
-    chrome.action.setIcon(icon_path, null)
-}
-
