@@ -17,7 +17,7 @@ function waitElementOnScreen(selector, callback, interval = 200) {
     	  	clearInterval(ckInterval);
 	    }
 	}, interval);
-}
+};
 
 /**
  * Função que permite observar mudanças no DOM de um elemento HTML.
@@ -65,7 +65,7 @@ function addMenuOnFooter(wppMain) {
 	
 		wppMain.querySelector('footer + span > div').insertBefore(newElement, mySpan.nextSibling)
 	}
-}
+};
 
 /**
  * Cria um elemento de ação 'Enviar para o app' e configura seu comportamento.
@@ -78,7 +78,7 @@ function createSendToApp() {
 	newAction.style.cssText = 'cursor: pointer; margin: 1rem;'
 	newAction.addEventListener('click', () => startSendMessagesToApp())
 	return newAction
-}
+};
 
 let actions = {};
 
@@ -88,7 +88,7 @@ function sendActionAsync(action, data) {
     return new Promise(resolve => {
         sendAction(action, data, resolve);
     })
-}
+};
 
 // sendAction("action", {message:1}, console.log)
 // sendAction("action", console.log)
@@ -117,7 +117,7 @@ function sendAction(action, data, callback) {
     }
 
     chrome.runtime.sendMessage(null, {action, data})
-}
+};
 
 chrome.runtime.onConnect.addListener(port => {
     port.onMessage.addListener(message => {
@@ -128,32 +128,26 @@ chrome.runtime.onConnect.addListener(port => {
         }
 
     })
-})
+});
 
-waitElementOnScreen(
-	'#main', 
-	async () => {
-		let newDialog = createDialog()
-		let projects = await sendActionAsync("getProjects");
-
-		console.log("awaiter getProjects", projects);
-		sendAction("getProjects", (data) => {
-		    console.log("meu callback fora do padrão", data)
-		});
-		document.getElementById('app').appendChild(newDialog)
-		observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
-)
-
-const projects = [
-	{value: 'a', text: 'projeto a'}, 
-	{value: 'b', text: 'projeto b'}, 
-	{value: 'c', text: 'projeto c'}
-];
+const projects = [];
 
 const serviceResponsible = [
 	{value: '#atendimento', text: '#atendimento'},
 	{value: '#spaceship', text:'#spaceship'}
-]
+];
+
+let selectedMessages = [];
+
+waitElementOnScreen(
+	'#main', 
+	async () => {
+		let loadedProjects = await sendActionAsync("getProjects");
+		loadedProjects.forEach(project => projects.push({value: project.id, text: project.name, code: project.code}))
+		let newDialog = createDialog()
+		document.getElementById('app').appendChild(newDialog)
+		observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
+);
 
 //////////////////////////////////////////////////
 ////Funções de criação do modal e suas funções////
@@ -166,14 +160,14 @@ function createDialog() {
 	dialog.appendChild(createDialogBody())
 	dialog.appendChild(createDialogFooter())
 	return dialog
-}
+};
 
 function createDialogHeader() {
 	const header = document.createElement('header')
 	header.id = 'myDialog-header'
 	header.textContent = 'Mensagens selecionadas'
 	return header
-}
+};
 
 function createDialogBody() {
 	const body = document.createElement('div')
@@ -181,8 +175,11 @@ function createDialogBody() {
 	body.appendChild(createTitleInput())
 	body.appendChild(createDialogSelect(projects, body, 'project-select'))
 	body.appendChild(createDialogSelect(serviceResponsible, body, 'service-select'))
+	const messagesContainer = document.createElement('div')
+	messagesContainer.id = 'myDialog-messages'
+	body.appendChild(messagesContainer)
 	return body
-}
+};
 
 function createDialogFooter() {
 	const footer = document.createElement('footer')
@@ -190,7 +187,7 @@ function createDialogFooter() {
 	footer.appendChild(createSaveTaskButton())
 	footer.appendChild(createCloseDialog())
 	return footer
-}
+};
 
 function createCloseDialog() {
 	const closeButton = document.createElement('button')
@@ -198,7 +195,7 @@ function createCloseDialog() {
 	closeButton.textContent = 'Fechar'
 	closeButton.addEventListener('click', () => closeMyDialog())
 	return closeButton
-}
+};
 
 function createSaveTaskButton() {
 	const closeButton = document.createElement('button')
@@ -206,10 +203,10 @@ function createSaveTaskButton() {
 	closeButton.textContent = 'Criar tarefa'
 	closeButton.addEventListener('click', () => createTask())
 	return closeButton
-}
+};
 
 function createMessages(selectedMessages) {
-	var dialog = document.getElementById('myDialog-body')
+	var dialog = document.getElementById('myDialog-messages')
 	for(let item of selectedMessages) {
 		var messageBody = document.createElement('div')
 		messageBody.className = 'selected-message'
@@ -218,9 +215,9 @@ function createMessages(selectedMessages) {
 		messageOrigin.innerHTML = item.time + ' - ' + item.name
 		messageBody.appendChild(messageOrigin)
 		messageBody.appendChild(messageText)
-		dialog.append(messageBody)
+		dialog.appendChild(messageBody)
 	}
-}
+};
 
 function createDialogSelect(options, elementId, name) {
 	var selectElement = document.createElement("select");
@@ -236,7 +233,7 @@ function createDialogSelect(options, elementId, name) {
 		selectElement.appendChild(optionElement);
 	}
 	return selectElement
-}
+};
 
 function createTitleInput() {
 	var inputElement = document.createElement('input');
@@ -248,22 +245,21 @@ function createTitleInput() {
 	// Set an initial value (optional)
 	inputElement.value = '';
 	return inputElement
-}
+};
 
 function closeMyDialog() {
 	myDialog.close()
 	var dialog = document.getElementById('myDialog')
 	dialog.remove()
+	selectedMessages = []
 	let newDialog = createDialog()
 	document.getElementById('app').appendChild(newDialog)
-}
+};
 
 async function createTask() {
-	const values = getSelectedValues()
-	alert(values.inputValue)
-	let projects = await retrieveProjects()
-	// closeMyDialog()
-}
+	console.log(getSelectedValues())
+	closeMyDialog()
+};
 
 ///////////////////////////
 // mensagens selecionadas:
@@ -278,13 +274,16 @@ function startSendMessagesToApp() {
         selected.push(item)
     })
   
-    let selectedMessages = []
-  
     for(let i in selected){
 		let message = selected[i].querySelector('.copyable-text')
-		let time = message.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
-		let messageText = message.querySelector(".selectable-text").textContent;
-		let name = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
+		let {time, messageText, name} = ''
+		if(message){
+			time = message.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
+			messageText = message.querySelector(".selectable-text").textContent;
+			name = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
+		} else {
+			continue
+		}
 		let img = ''
 		// const messageImgs = message.querySelectorAll("img")
 		// if(messageImgs.length > 0) {
@@ -294,13 +293,8 @@ function startSendMessagesToApp() {
 		selectedMessages.push({time, name, messageText})
     }
     createMessages(selectedMessages)
-    // chrome.runtime.sendMessage('get-project-data', (response) => {
-    //   // Got an asynchronous response with the data from the service worker
-    //   console.log('received project data', response);
-    // });
-    // fetchCookie()
     myDialog.showModal()
-  }
+  };
 
 
 function getSelectedValues() {
@@ -311,42 +305,16 @@ function getSelectedValues() {
 	var selectedProjectOption = selectProjectElement.options[selectProjectElement.selectedIndex];
 	var selectedProject = selectedProjectOption.value;
 
+	var project = projects.find(el => el.value == selectedProject)
+
 	var selectServiceElement = document.getElementById("service-select");
 	var selectedServiceOption = selectServiceElement.options[selectServiceElement.selectedIndex];
 	var selectedService = selectedServiceOption.value;
 
-	return {inputValue, selectedProject, selectedService}
-}
-
-
-function getProjectsFromServer(){
-	return new Promise((resolve, reject) => {
-		sendAction("getProjects", resolve);
-	});
-}
-
-
-function createTaskFromModal(){
-	// todo: get all data from modal
-	let data = {
-		mock: "true"
+	return {
+		title: inputValue, 
+		project: project, 
+		serviceType: selectedService,
+		messages: selectedMessages
 	}
-}
-
-// chrome.runtime.onConnect.addListener(port => {
-//   port.onMessage.addListener(message => {
-//       console.log(message)
-//   })
-// })
-
-
-function fetchCookie() {
-	chrome.tabs.query({}, function (tabs) {
-		// const activeTab = tabs[0];
-		// chrome.cookies.getAll({ url: activeTab.url }, function (cookies) {
-		// Process the cookies, maybe find the one you need
-		// Here, we are logging all cookies to the console
-		console.log(tabs);
-		});
-	// });
-}
+};

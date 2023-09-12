@@ -51,11 +51,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             if(cookieErr) return;
             
             const { tab } = sender;
-            tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-extension-tab${tab.id}` });
+            tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-whatsapp-msg${tab.id}` });
 
             try {
                 const projects = await retrieveProjects(cookie)
-
                 tabPort.postMessage({
                     action: message.action,
                     data: projects

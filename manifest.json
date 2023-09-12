@@ -27,7 +27,9 @@
         "https://app.liveseo.com.br/*",
         "https://qa.app.liveseo.com.br/*",
         "https://*.google.com/*",
-        "http://localhost:3000/*"
+        "http://localhost:3000/*",
+        "http://localhost:3010/*"
+
     ],
     "content_scripts": [
         {
