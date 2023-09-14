@@ -76,7 +76,7 @@ function createSendToApp() {
 	newAction.textContent = 'Enviar para o app'
 	newAction.id = 'send-to-app'
 	newAction.style.cssText = 'cursor: pointer; margin: 1rem;'
-	newAction.addEventListener('click', () => startSendMessagesToApp())
+	newAction.addEventListener('click', startSendMessagesToApp)
 	return newAction
 };
 
@@ -137,7 +137,21 @@ const serviceResponsible = [
 	{value: '#spaceship', text:'#spaceship'}
 ];
 
+const requestType = [
+	{value: '#incidente', text: '#incidente'},
+	{value: '#duvida', text: '#duvida'},
+	{value: '#solicitacao', text: '#solicitacao'},
+	{value: '#aviso', text: '#aviso'}
+];
+
+const frequencyType =[
+	{value: '#inedito', text: '#inedito'},
+	{value: '#recorrente', text: '#recorrente'},
+	{value: '#esporadico', text: '#esporadico'}
+]
+
 let selectedMessages = [];
+let groupTitle = ''
 
 waitElementOnScreen(
 	'#main', 
@@ -165,7 +179,7 @@ function createDialog() {
 function createDialogHeader() {
 	const header = document.createElement('header')
 	header.id = 'myDialog-header'
-	header.textContent = 'Mensagens selecionadas'
+	header.textContent = 'Mensagens selecionadas - ' + getGroupTitle()
 	return header
 };
 
@@ -173,8 +187,10 @@ function createDialogBody() {
 	const body = document.createElement('div')
 	body.id = 'myDialog-body'
 	body.appendChild(createTitleInput())
-	body.appendChild(createDialogSelect(projects, body, 'project-select'))
-	body.appendChild(createDialogSelect(serviceResponsible, body, 'service-select'))
+	body.appendChild(createDialogSelect(projects, body, 'project-select', 'Projeto'))
+	body.appendChild(createDialogSelect(serviceResponsible, body, 'service-select', 'Setor responsável'))
+	body.appendChild(createDialogSelect(requestType, body, 'request-select', 'Tipo de atendimento'))
+	body.appendChild(createDialogSelect(frequencyType, body, 'frequency-select', 'Frequencia'))
 	const messagesContainer = document.createElement('div')
 	messagesContainer.id = 'myDialog-messages'
 	body.appendChild(messagesContainer)
@@ -212,11 +228,18 @@ function createMessages(selectedMessages) {
 		messageBody.className = 'selected-message'
 		var messageOrigin = document.createElement('div')
 		var messageText = document.createTextNode(item.messageText)
-		messageOrigin.innerHTML = item.time + ' - ' + item.name
+		messageOrigin.innerHTML = item.time + ' - ' + item.contactName + ' - ' + item.contactNumber
 		messageBody.appendChild(messageOrigin)
 		messageBody.appendChild(messageText)
 		dialog.appendChild(messageBody)
 	}
+	// teste usando p innerText
+	// for(let item  of selectedMessages){
+	// 	var messageBody = document.createElement('div')
+	// 	messageBody.innerText = item
+	// 	messageBody.className = 'selected-message'
+	// 	dialog.appendChild(messageBody)
+	// }
 };
 
 function createDialogSelect(options, elementId, name) {
@@ -257,12 +280,18 @@ function closeMyDialog() {
 };
 
 async function createTask() {
-	console.log(getSelectedValues())
+	let taskData = getSelectedValues()
+	let createdTask = await sendActionAsync("createTask", taskData);
+	if(createdTask === 'success'){
+		let sendToApp = document.getElementById('send-to-app')
+		sendToApp.removeEventListener('click', startSendMessagesToApp)
+		sendToApp.innerText = 'Tarefa enviada para o App!'
+	}
 	closeMyDialog()
 };
 
-///////////////////////////
-// mensagens selecionadas:
+////////////////////////////
+//mensagens selecionadas://
 ///////////////////////////
   
 function startSendMessagesToApp() {
@@ -273,29 +302,95 @@ function startSendMessagesToApp() {
         if(!ckbox) return;
         selected.push(item)
     })
+	// teste usando p innerText
+	// for(let i in selected){
+	// 	let message = selected[i].innerText
+	// 	selectedMessages.push(message)
+	// }
   
     for(let i in selected){
 		let message = selected[i].querySelector('.copyable-text')
-		let {time, messageText, name} = ''
+		let {time, contactName, contactNumber, messageText} = ''
 		if(message){
-			time = message.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
-			messageText = message.querySelector(".selectable-text").textContent;
-			name = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
+			let quoted = selected[i].getElementsByClassName('quoted-mention')
+			if(quoted.length){
+				let quotedMessage = message.firstChild.innerText.split('\n')
+				contactName = quotedMessage[0]
+				quotedMessage.length > 2 ? contactNumber = quotedMessage[1] : contactNumber = ''
+				quotedMessage.length > 2 ? messageText = quotedMessage[2] : messageText = quotedMessage[1]
+				time = 'Mensagem respondida' 
+				selectedMessages.push({time, contactName, contactNumber, messageText})
+				time = getTime(message)
+				contactName = getContactName(selected[i])
+				contactNumber = getContactNumber(selected[i])
+				messageText = getMessageText(message)
+				selectedMessages.push({time, contactName, contactNumber, messageText})
+			} else {
+				time = getTime(message)
+				contactName = getContactName(selected[i])
+				contactNumber = getContactNumber(selected[i])
+				messageText = getMessageText(message)
+				selectedMessages.push({time, contactName, contactNumber, messageText})
+			}
 		} else {
 			continue
 		}
-		let img = ''
+	// 	let img = ''
 		// const messageImgs = message.querySelectorAll("img")
 		// if(messageImgs.length > 0) {
 		//   img = messageImgs[1].getAttribute('src')
 		// }
-	
-		selectedMessages.push({time, name, messageText})
+		
     }
     createMessages(selectedMessages)
+	let projectGroup = verifyProject(groupTitle)
+	if(projectGroup) {
+		let selectedProject = projects.find(project => project.code === projectGroup)
+		var selectProjectElement = document.getElementById("project-select");
+		selectProjectElement.value = selectedProject.value
+	}
     myDialog.showModal()
   };
 
+
+//////////////////////////////////////////////////
+//Funções para catpturar os valores selecionadas//
+//////////////////////////////////////////////////
+function getTime(selectedMessage) {
+	const time = selectedMessage.getAttribute("data-pre-plain-text").replace(/\[(.*), (.*)\] .*: /, "$2 $1");
+	return time
+}
+
+function getMessageText(selectedMessage) {
+	const messageText = selectedMessage.querySelector(".selectable-text").textContent;
+	return messageText
+}
+
+function getContactName(selectedMessage) {
+	let contactName = selectedMessage.textContent.match(/(.*?)\+55/)
+	if(!contactName){
+		let message = selectedMessage.querySelector('.copyable-text')
+		contactName = message.getAttribute("data-pre-plain-text").replace(/\[.*\] (.*): /, "$1");
+	} else {
+		contactName = contactName[1]
+	}
+	return contactName
+}
+function getContactNumber(selectedMessage) {
+	let element = selectedMessage.firstChild.getAttribute('data-id')
+	let values = element.split('_')
+	const contactNumber = values[values.length -1].replace('@c.us', '')
+	return contactNumber
+}
+
+
+function getGroupTitle(){
+	const main = document.getElementById('main')
+	const header = main.getElementsByTagName('header')
+	// groupTitle = header[0].querySelector('div:nth-child(2) > div > div > span').innerText
+	groupTitle = 'CB385 - teste'
+	return groupTitle
+};
 
 function getSelectedValues() {
 	var inputElement = document.getElementById("task-title-input");
@@ -307,14 +402,33 @@ function getSelectedValues() {
 
 	var project = projects.find(el => el.value == selectedProject)
 
-	var selectServiceElement = document.getElementById("service-select");
-	var selectedServiceOption = selectServiceElement.options[selectServiceElement.selectedIndex];
-	var selectedService = selectedServiceOption.value;
+	var selectedService = getSelectdOption("service-select");
+	var selectedRequest = getSelectdOption("request-select");
+	var selectedFrequency = getSelectdOption("frequency-select");
 
 	return {
 		title: inputValue, 
 		project: project, 
 		serviceType: selectedService,
-		messages: selectedMessages
+		messages: selectedMessages,
+		requestType: selectedRequest,
+		frequency: selectedFrequency
 	}
 };
+
+function getSelectdOption(elementId) {
+	var selectedElement = document.getElementById(elementId);
+	var selectedOption = selectedElement.options[selectedElement.selectedIndex];
+	var selectedValue = selectedOption.value;
+	return selectedValue
+}
+
+function verifyProject(groupTitle) {
+	const regex = /CB\d+/;
+	const match = groupTitle.match(regex);
+	if (match) {
+	  return match[0];
+	} else {
+	  return null; // Return null if 'CB' is not found in the string
+	}
+  }

@@ -60,21 +60,21 @@
     border: solid 1px #D2CFC8;
 }
 
-#project-select, #service-select {
+#project-select, #service-select, #request-select, #frequency-select {
     width: 18rem;
     border: solid 1px #D2CFC8;
     border-radius: 6px;
     padding: 0.5rem;
 }
 
-#project-select {
+#project-select, #request-select {
     margin: 0.5rem;
 }
 
-#service-select {
+#service-select, #frequency-select {
     margin: 0.5rem 0.5rem 0.5rem 2rem;
 }
 
-#project-select:focus, #service-select:focus, #task-title-input:focus {
+#project-select:focus, #service-select:focus, #request-select:focus, #frequency-select:focus, #task-title-input:focus {
     border: solid 1px #919AA0 !important;
 }

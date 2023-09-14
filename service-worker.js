@@ -41,18 +41,16 @@ let counterTimeout;
 let connCookie = null;
 
 
-
 //------------------------------************************----------------------
 //------------------------------LISTENER CONTENT------------------------------
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    const { tab } = sender;
+    tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-whatsapp-msg${tab.id}` });
     switch(message.action) {
         case 'getProjects':
             const [cookieErr, cookie] = await retrieveCookie();
             if(cookieErr) return;
             
-            const { tab } = sender;
-            tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-whatsapp-msg${tab.id}` });
-
             try {
                 const projects = await retrieveProjects(cookie)
                 tabPort.postMessage({
@@ -62,6 +60,14 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             } catch (error) {
                 tabPort.postMessage({ action: 'error' });
             }
+            break;
+        case 'createTask':
+            console.log(message.data)
+            tabPort.postMessage({
+                action: message.action,
+                data: 'success'
+            });
+            break;
     }
     return;
 }); 
