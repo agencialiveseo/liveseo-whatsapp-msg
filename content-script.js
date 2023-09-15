@@ -228,12 +228,13 @@ function createMessages(selectedMessages) {
 		messageBody.className = 'selected-message'
 		var messageOrigin = document.createElement('div')
 		var messageText = document.createTextNode(item.messageText)
-		messageOrigin.innerHTML = item.time + ' - ' + item.contactName + ' - ' + item.contactNumber
+		messageOrigin.innerHTML = setMessageOrign(item)
 		messageBody.appendChild(messageOrigin)
 		messageBody.appendChild(messageText)
 		dialog.appendChild(messageBody)
 	}
-	// teste usando p innerText
+	// teste usando o innerText
+	//
 	// for(let item  of selectedMessages){
 	// 	var messageBody = document.createElement('div')
 	// 	messageBody.innerText = item
@@ -241,6 +242,20 @@ function createMessages(selectedMessages) {
 	// 	dialog.appendChild(messageBody)
 	// }
 };
+
+function setMessageOrign(item) {
+	let text = ''
+	if(item.replied){
+		if(item.time){
+			text = item.replied + ' - ' + item.time + ' - ' + item.contactName + ' - ' + item.contactNumber
+		} else {
+			text = item.replied + ' - ' + item.contactName + ' - ' + item.contactNumber
+		}
+	} else {
+		text = item.time + ' - ' + item.contactName + ' - ' + item.contactNumber
+	}
+	return text
+}
 
 function createDialogSelect(options, elementId, name) {
 	var selectElement = document.createElement("select");
@@ -310,27 +325,30 @@ function startSendMessagesToApp() {
   
     for(let i in selected){
 		let message = selected[i].querySelector('.copyable-text')
-		let {time, contactName, contactNumber, messageText} = ''
+		let {time, replied, contactName, contactNumber, messageText} = ''
 		if(message){
 			let quoted = selected[i].getElementsByClassName('quoted-mention')
 			if(quoted.length){
 				let quotedMessage = message.firstChild.innerText.split('\n')
 				contactName = quotedMessage[0]
+				time = ''
 				quotedMessage.length > 2 ? contactNumber = quotedMessage[1] : contactNumber = ''
 				quotedMessage.length > 2 ? messageText = quotedMessage[2] : messageText = quotedMessage[1]
-				time = 'Mensagem respondida' 
-				selectedMessages.push({time, contactName, contactNumber, messageText})
+				replied = 'Mensagem anterior' 
+				selectedMessages.push({time, replied, contactName, contactNumber, messageText})
 				time = getTime(message)
+				replied = 'Resposta'
 				contactName = getContactName(selected[i])
 				contactNumber = getContactNumber(selected[i])
 				messageText = getMessageText(message)
-				selectedMessages.push({time, contactName, contactNumber, messageText})
+				selectedMessages.push({time, replied, contactName, contactNumber, messageText})
 			} else {
 				time = getTime(message)
+				replied = ''
 				contactName = getContactName(selected[i])
 				contactNumber = getContactNumber(selected[i])
 				messageText = getMessageText(message)
-				selectedMessages.push({time, contactName, contactNumber, messageText})
+				selectedMessages.push({time, replied, contactName, contactNumber, messageText})
 			}
 		} else {
 			continue
