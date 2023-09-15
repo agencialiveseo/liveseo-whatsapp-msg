@@ -38,6 +38,35 @@ let apiUrl = environmentMap[environment].api;
 let count = 0;
 let counterTimeout;
 
+// Registre o atalho de teclado para alternar o ambiente
+chrome.commands.onCommand.addListener(function(command) {
+    if (command === "toggle-environment") {
+        count++
+        if(count <= 5){
+            if(counterTimeout) clearTimeout(counterTimeout)            
+            counterTimeout = setTimeout(() => count = 0, 10000);
+            return; 
+        } 
+        // Alternar entre os ambientes da API
+        if (environment === "LOCAL") {
+            environment = "QA";
+        } else if (environment === "QA") {
+            environment = "PROD";
+        } else if (environment === "PROD") {
+            environment = "LOCAL";
+        }
+
+        // Atualizar as URLs da aplicação e da API
+        appUrl = environmentMap[environment].app;
+        apiUrl = environmentMap[environment].api;
+
+        // Salvar o ambiente no Local Storage
+        chrome.storage.local.set({ environment: environment });
+        console.log(environment)
+    }
+});
+
+
 let connCookie = null;
 
 
@@ -46,11 +75,11 @@ let connCookie = null;
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
     const { tab } = sender;
     tabPort = chrome.tabs.connect(tab.id, { name: `liveSEO-whatsapp-msg${tab.id}` });
+    const [cookieErr, cookie] = await retrieveCookie();
+    if(cookieErr) return;
+
     switch(message.action) {
         case 'getProjects':
-            const [cookieErr, cookie] = await retrieveCookie();
-            if(cookieErr) return;
-            
             try {
                 const projects = await retrieveProjects(cookie)
                 tabPort.postMessage({
@@ -63,10 +92,26 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             break;
         case 'createTask':
             console.log(message.data)
-            tabPort.postMessage({
-                action: message.action,
-                data: 'success'
-            });
+            let data
+            try {
+                const response = await fetch(`${apiUrl}/extension-task-generator`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Cookie': cookie,
+                    },
+                    body: JSON.stringify(message.data)
+                });
+                data = await response.json();
+                if(data.error) throw new Error(data.error)
+            } catch (error) {
+                console.log(error)
+            } finally {
+                tabPort.postMessage({
+                    action: message.action,
+                    data: data
+                });
+            }
             break;
     }
     return;

@@ -297,10 +297,14 @@ function closeMyDialog() {
 async function createTask() {
 	let taskData = getSelectedValues()
 	let createdTask = await sendActionAsync("createTask", taskData);
-	if(createdTask === 'success'){
+	if(createdTask?.status === 'success') {
 		let sendToApp = document.getElementById('send-to-app')
 		sendToApp.removeEventListener('click', startSendMessagesToApp)
 		sendToApp.innerText = 'Tarefa enviada para o App!'
+	} else {
+		let sendToApp = document.getElementById('send-to-app')
+		sendToApp.removeEventListener('click', startSendMessagesToApp)
+		sendToApp.innerText = 'Erro na criação da tarefa!'
 	}
 	closeMyDialog()
 };
@@ -405,8 +409,8 @@ function getContactNumber(selectedMessage) {
 function getGroupTitle(){
 	const main = document.getElementById('main')
 	const header = main.getElementsByTagName('header')
-	// groupTitle = header[0].querySelector('div:nth-child(2) > div > div > span').innerText
-	groupTitle = 'CB385 - teste'
+	groupTitle = header[0].querySelector('div:nth-child(2) > div > div > span').innerText
+	// groupTitle = 'CB194 - teste'
 	return groupTitle
 };
 
@@ -450,3 +454,24 @@ function verifyProject(groupTitle) {
 	  return null; // Return null if 'CB' is not found in the string
 	}
   }
+
+
+// fetch image base64
+//   function fetchAndConvertToBase64(imageSrc, callback) {
+// 	// Use fetch to get the image as a Blob
+// 	fetch(imageSrc)
+// 	  .then(response => response.blob())
+// 	  .then(blob => {
+// 		// Use FileReader to read the Blob as base64
+// 		const reader = new FileReader();
+// 		reader.onload = () => {
+// 		  const base64String = reader.result; // Extract the base64 part
+// 		  callback(base64String);
+// 		};
+// 		reader.readAsDataURL(blob);
+// 	  })
+// 	  .catch(error => {
+// 		console.error('Error fetching and converting image:', error);
+// 		callback(null); // Pass null to the callback in case of an error
+// 	  });
+//   }

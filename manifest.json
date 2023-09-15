@@ -46,5 +46,14 @@
     ],
     "content_security_policy":{
         "extension_pages": "script-src 'self'; object-src 'self'; script-src-elem 'self' https://apis.google.com https://www.gstatic.com https://www.googleapis.com https://securetoken.googleapis.com;"
+    },
+    "commands": {
+        "toggle-environment": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+L",
+                "mac": "Command+Shift+L"
+            },
+            "description": "Alternar entre os ambientes da API"
+        }
     }
 }
