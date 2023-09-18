@@ -82,16 +82,12 @@ function createSendToApp() {
 
 let actions = {};
 
-// sendActionAsync("action", {message:1}).then(console.log)
-// await sendActionAsync("action");
 function sendActionAsync(action, data) {
     return new Promise(resolve => {
         sendAction(action, data, resolve);
     })
 };
 
-// sendAction("action", {message:1}, console.log)
-// sendAction("action", console.log)
 function sendAction(action, data, callback) {
     if(typeof data == 'function'){
         callback = data;
@@ -133,11 +129,13 @@ chrome.runtime.onConnect.addListener(port => {
 const projects = [];
 
 const serviceResponsible = [
+	{value: null , text: 'Responsável'},	
 	{value: '#atendimento', text: '#atendimento'},
 	{value: '#spaceship', text:'#spaceship'}
 ];
 
 const requestType = [
+	{value: null , text: 'Tipo do atendimento'},
 	{value: '#incidente', text: '#incidente'},
 	{value: '#duvida', text: '#duvida'},
 	{value: '#solicitacao', text: '#solicitacao'},
@@ -145,7 +143,7 @@ const requestType = [
 ];
 
 const frequencyType =[
-	{value: '#inedito', text: '#inedito'},
+	{value: null , text: 'Frequência'},
 	{value: '#recorrente', text: '#recorrente'},
 	{value: '#esporadico', text: '#esporadico'}
 ]
@@ -157,6 +155,7 @@ waitElementOnScreen(
 	'#main', 
 	async () => {
 		let loadedProjects = await sendActionAsync("getProjects");
+		projects.push({value: null, text: 'Selecione o projeto'})
 		loadedProjects.forEach(project => projects.push({value: project.id, text: project.name, code: project.code}))
 		let newDialog = createDialog()
 		document.getElementById('app').appendChild(newDialog)
@@ -232,6 +231,10 @@ function createMessages(selectedMessages) {
 		messageBody.appendChild(messageOrigin)
 		messageBody.appendChild(messageText)
 		dialog.appendChild(messageBody)
+		if(item.messageImage){
+			var messageImage = createImageMessage(item.messageImage)
+			messageBody.appendChild(messageImage)
+		}
 	}
 	// teste usando o innerText
 	//
@@ -313,7 +316,7 @@ async function createTask() {
 //mensagens selecionadas://
 ///////////////////////////
   
-function startSendMessagesToApp() {
+async function startSendMessagesToApp() {
     let itens = document.querySelectorAll("div[role='application'] div[role='row']")
     let selected = [];
     itens.forEach(function(item){
@@ -329,7 +332,7 @@ function startSendMessagesToApp() {
   
     for(let i in selected){
 		let message = selected[i].querySelector('.copyable-text')
-		let {time, replied, contactName, contactNumber, messageText} = ''
+		let {time, replied, contactName, contactNumber, messageText, messageImage} = ''
 		if(message){
 			let quoted = selected[i].getElementsByClassName('quoted-mention')
 			if(quoted.length){
@@ -345,24 +348,24 @@ function startSendMessagesToApp() {
 				contactName = getContactName(selected[i])
 				contactNumber = getContactNumber(selected[i])
 				messageText = getMessageText(message)
-				selectedMessages.push({time, replied, contactName, contactNumber, messageText})
+				messageImage = await getImages(selected[i])
 			} else {
 				time = getTime(message)
 				replied = ''
 				contactName = getContactName(selected[i])
 				contactNumber = getContactNumber(selected[i])
 				messageText = getMessageText(message)
-				selectedMessages.push({time, replied, contactName, contactNumber, messageText})
+				messageImage = await getImages(selected[i])
 			}
 		} else {
-			continue
+			time = getValuesForImageMessage(selected[i]).time
+			replied = ''
+			contactName = getValuesForImageMessage(selected[i]).name
+			contactNumber = getValuesForImageMessage(selected[i]).contact
+			messageText = ''
+			messageImage = await getImages(selected[i])
 		}
-	// 	let img = ''
-		// const messageImgs = message.querySelectorAll("img")
-		// if(messageImgs.length > 0) {
-		//   img = messageImgs[1].getAttribute('src')
-		// }
-		
+		selectedMessages.push({time, replied, contactName, contactNumber, messageText, messageImage})
     }
     createMessages(selectedMessages)
 	let projectGroup = verifyProject(groupTitle)
@@ -374,6 +377,43 @@ function startSendMessagesToApp() {
     myDialog.showModal()
   };
 
+  function createImageMessage(imgSrc) {
+	let imageElement = document.createElement('img')
+	imageElement.src = imgSrc
+	imageElement.style.cssText = "width: 50%; margin: 1rem 1rem 0;"
+	return imageElement
+  }
+
+
+  async function getImages(selectedMessage) {
+	const messageImgs = selectedMessage.querySelectorAll("img");
+	if (messageImgs.length) {
+	  let trueImg = null;
+	  for (const el of messageImgs) {
+		if (el.src.startsWith('blob:')) {
+		  trueImg = el.src;
+		  break; // Encontrou uma imagem válida, não é necessário continuar o loop.
+		}
+	  }
+  
+	  if (trueImg) {
+		try {
+		  const base64String = await fetchAndConvertToBase64(trueImg);
+		  return base64String;
+		} catch (error) {
+		  console.error('Erro ao buscar e converter a imagem:', error);
+		  return null;
+		}
+	  }
+	}
+	return false;
+  };
+
+  function getValuesForImageMessage(selectedMessage) {
+	let message = selectedMessage.innerText
+	let values = message.split('\n')
+	return {name: values[0], contact: values[1], time: values[2]}
+  }
 
 //////////////////////////////////////////////////
 //Funções para catpturar os valores selecionadas//
@@ -456,22 +496,27 @@ function verifyProject(groupTitle) {
   }
 
 
-// fetch image base64
-//   function fetchAndConvertToBase64(imageSrc, callback) {
-// 	// Use fetch to get the image as a Blob
-// 	fetch(imageSrc)
-// 	  .then(response => response.blob())
-// 	  .then(blob => {
-// 		// Use FileReader to read the Blob as base64
-// 		const reader = new FileReader();
-// 		reader.onload = () => {
-// 		  const base64String = reader.result; // Extract the base64 part
-// 		  callback(base64String);
-// 		};
-// 		reader.readAsDataURL(blob);
-// 	  })
-// 	  .catch(error => {
-// 		console.error('Error fetching and converting image:', error);
-// 		callback(null); // Pass null to the callback in case of an error
-// 	  });
-//   }
+//fetch image base64
+async function fetchAndConvertToBase64(imageSrc) {
+	try {
+	  const response = await fetch(imageSrc);
+	  if (!response.ok) {
+		throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
+	  }
+  
+	  const blob = await response.blob();
+	  return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+		  const base64String = reader.result; // Extrai a parte em base64
+		  resolve(base64String);
+		};
+		reader.onerror = reject;
+		reader.readAsDataURL(blob);
+	  });
+	} catch (error) {
+	  console.error('Erro ao buscar e converter a imagem:', error);
+	  throw error;
+	}
+  }
+  

@@ -91,7 +91,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             }
             break;
         case 'createTask':
-            console.log(message.data)
             let data
             try {
                 const response = await fetch(`${apiUrl}/extension-task-generator`, {
