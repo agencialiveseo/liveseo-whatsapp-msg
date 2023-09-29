@@ -395,16 +395,17 @@ async function startSendMessagesToApp() {
 		  break; // Encontrou uma imagem válida, não é necessário continuar o loop.
 		}
 	  }
-  
-	  if (trueImg) {
-		try {
-		  const base64String = await fetchAndConvertToBase64(trueImg);
-		  return base64String;
-		} catch (error) {
-		  console.error('Erro ao buscar e converter a imagem:', error);
-		  return null;
-		}
-	  }
+	return trueImg
+	//if (trueImg) {
+	// 	try {
+	// 	  const base64String = await fetchAndConvertToBase64(trueImg);
+	// 	  const arrayBuffer = await fetchAndConvertToArrayBuffer(trueImg)
+	// 	  return {base64String, arrayBuffer};
+	// 	} catch (error) {
+	// 	  console.error('Erro ao buscar e converter a imagem:', error);
+	// 	  return null;
+	// 	}
+	//   }
 	}
 	return false;
   };
@@ -498,6 +499,7 @@ function verifyProject(groupTitle) {
 
 //fetch image base64
 async function fetchAndConvertToBase64(imageSrc) {
+	debugger
 	try {
 	  const response = await fetch(imageSrc);
 	  if (!response.ok) {
@@ -513,6 +515,30 @@ async function fetchAndConvertToBase64(imageSrc) {
 		};
 		reader.onerror = reject;
 		reader.readAsDataURL(blob);
+	  });
+	} catch (error) {
+	  console.error('Erro ao buscar e converter a imagem:', error);
+	  throw error;
+	}
+  }
+
+  async function fetchAndConvertToArrayBuffer(imageSrc) {
+	debugger
+	try {
+	  const response = await fetch(imageSrc);
+	  if (!response.ok) {
+		throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
+	  }
+  
+	  const blob = await response.blob();
+	  return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+		  const arrayBuffer = reader.result; // Extrai a parte em base64
+		  resolve(arrayBuffer);
+		};
+		reader.onerror = reject;
+		reader.readAsArrayBuffer(blob);
 	  });
 	} catch (error) {
 	  console.error('Erro ao buscar e converter a imagem:', error);

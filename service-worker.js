@@ -92,6 +92,13 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             break;
         case 'createTask':
             console.log(message.data)
+            for(let i in message.data.messages) {
+                if(message.data.messages[i].messageImage){
+                    let imageBuffer = await fetchAndConvertToArrayBuffer(message.data.messages[i].messageImage)
+                    message.data.messages[i].messageImageBuffer = imageBuffer
+                }
+            }   
+            
             let data
             try {
                 const response = await fetch(`${apiUrl}/extension-task-generator`, {
@@ -143,3 +150,27 @@ async function retrieveCookie() {
         });
     });
 }
+
+async function fetchAndConvertToArrayBuffer(imageSrc) {
+	debugger
+	try {
+	  const response = await fetch(imageSrc);
+	  if (!response.ok) {
+		throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
+	  }
+  
+	  const blob = await response.blob();
+	  return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+		  const arrayBuffer = reader.result; // Extrai a parte em base64
+		  resolve(arrayBuffer);
+		};
+		reader.onerror = reject;
+		reader.readAsArrayBuffer(blob);
+	  });
+	} catch (error) {
+	  console.error('Erro ao buscar e converter a imagem:', error);
+	  throw error;
+	}
+  }
