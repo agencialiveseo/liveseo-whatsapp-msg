@@ -104,10 +104,10 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 const response = await fetch(`${apiUrl}/extension-task-generator`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/octet-stream',
                         'Cookie': cookie,
                     },
-                    body: JSON.stringify(message.data)
+                    body: message.data
                 });
                 data = await response.json();
                 if(data.error) throw new Error(data.error)
@@ -154,21 +154,22 @@ async function retrieveCookie() {
 async function fetchAndConvertToArrayBuffer(imageSrc) {
 	debugger
 	try {
-	  const response = await fetch(imageSrc);
-	  if (!response.ok) {
-		throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
-	  }
-  
-	  const blob = await response.blob();
-	  return new Promise((resolve, reject) => {
-		const reader = new FileReader();
-		reader.onload = () => {
-		  const arrayBuffer = reader.result; // Extrai a parte em base64
-		  resolve(arrayBuffer);
-		};
-		reader.onerror = reject;
-		reader.readAsArrayBuffer(blob);
-	  });
+        const response = await fetch(imageSrc);
+        if (!response.ok) {
+        throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const arrayBuffer = reader.result; // Extrai a parte em base64
+                resolve(arrayBuffer);
+            };
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(blob);
+        });
 	} catch (error) {
 	  console.error('Erro ao buscar e converter a imagem:', error);
 	  throw error;
