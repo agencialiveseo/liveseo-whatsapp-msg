@@ -62,6 +62,7 @@ chrome.commands.onCommand.addListener(function(command) {
 
         // Salvar o ambiente no Local Storage
         chrome.storage.local.set({ environment: environment });
+        //não remover o console.log - usado para verificar o environment
         console.log(environment)
     }
 });
@@ -91,34 +92,31 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             }
             break;
         case 'createTask':
-            console.log(message.data)
-            for(let i in message.data.messages) {
-                if(message.data.messages[i].messageImage){
-                    let imageBuffer = await fetchAndConvertToArrayBuffer(message.data.messages[i].messageImage)
-                    message.data.messages[i].messageImageBuffer = imageBuffer
-                }
-            }   
-            
-            let data
-            try {
-                const response = await fetch(`${apiUrl}/extension-task-generator`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/octet-stream',
-                        'Cookie': cookie,
-                    },
-                    body: message.data
-                });
-                data = await response.json();
-                if(data.error) throw new Error(data.error)
-            } catch (error) {
-                console.log(error)
-            } finally {
-                tabPort.postMessage({
-                    action: message.action,
-                    data: data
-                });
+            const messages = message.data.messages
+            delete message.data.messages
+
+            let taskresponse = await createTask(message.data, cookie)
+            //let taskresponse = {status: 'success', id: 1393}
+            if(taskresponse.status === 'success'){
+                for(let i in messages) {
+                    if(messages[i].messageImage){
+                        let imageBuffer = await fetchAndConvertToArrayBuffer(messages[i].messageImage)
+                        try {
+                            let imageUrl = await uploadSelectedImages(imageBuffer, taskresponse.id, cookie)
+                            messages[i].messageImage = imageUrl
+                        } catch (error) {
+                            console.error(error)
+                        }
+                    }
+                }   
             }
+
+            let updateResponse = await updateTaskDescription(messages, taskresponse.id, cookie)
+
+            tabPort.postMessage({
+                action: message.action,
+                data: updateResponse.status
+            });
             break;
     }
     return;
@@ -151,27 +149,77 @@ async function retrieveCookie() {
     });
 }
 
+async function createTask(messageData, cookie){
+    try {
+        //create new task and return task_id
+        const response = await fetch(`${apiUrl}/extension-task-generator`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': cookie,
+            },
+            body: JSON.stringify(messageData)
+        });
+        let data = await response.json();
+        if(data.error) throw new Error(data.error)
+        return data
+    } catch (error) {
+        console.error(error)
+    } 
+};
+
 async function fetchAndConvertToArrayBuffer(imageSrc) {
-	debugger
 	try {
         const response = await fetch(imageSrc);
         if (!response.ok) {
-        throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
+            throw new Error(`Erro ao buscar a imagem: ${response.statusText}`);
         }
-
         const blob = await response.blob();
-        
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                const arrayBuffer = reader.result; // Extrai a parte em base64
-                resolve(arrayBuffer);
-            };
-            reader.onerror = reject;
-            reader.readAsArrayBuffer(blob);
-        });
+        return blob;
 	} catch (error) {
 	  console.error('Erro ao buscar e converter a imagem:', error);
 	  throw error;
 	}
-  }
+  };
+
+
+async function uploadSelectedImages(imageBlob, subtaskId, cookie){
+    try {   
+        let formImage = new FormData()
+        formImage.append('image', imageBlob);
+        const response = await fetch(`${appUrl}/v1/upload?content_type=subtask&content_id=${subtaskId}`, {
+            method: 'POST',
+            headers: {
+                'Cookies': cookie
+            }, 
+            body: formImage
+        })
+        let data = await response.json()
+        if(data.status){
+            return data.data.url
+        } else {
+            throw new Error('Erro ao fazer upload da imagem')
+        }
+    } catch (error) {
+        console.error(error)
+    }
+};
+
+async function updateTaskDescription(selectedMessages, subtaskId, cookie) {
+    try {
+        let messages =  {messages: [...selectedMessages]}
+        const response = await fetch(`${apiUrl}/extension-task-generator/${subtaskId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Cookie': cookie,
+            },
+            body: JSON.stringify(messages)
+        });
+        let data = await response.json();
+        if(data.error) throw new Error(data.error)
+        return data
+    } catch (error) {
+        console.error
+    }
+}

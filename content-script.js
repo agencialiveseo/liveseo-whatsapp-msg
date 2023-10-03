@@ -145,7 +145,7 @@ const requestType = [
 const frequencyType =[
 	{value: null , text: 'Frequência'},
 	{value: '#recorrente', text: '#recorrente'},
-	{value: '#esporadico', text: '#esporadico'}
+	{value: '#esporadicos', text: '#esporadicos'}
 ]
 
 let selectedMessages = [];
@@ -227,7 +227,7 @@ function createMessages(selectedMessages) {
 		messageBody.className = 'selected-message'
 		var messageOrigin = document.createElement('div')
 		var messageText = document.createTextNode(item.messageText)
-		messageOrigin.innerHTML = setMessageOrign(item)
+		messageOrigin.innerHTML = setMessageOrigin(item)
 		messageBody.appendChild(messageOrigin)
 		messageBody.appendChild(messageText)
 		dialog.appendChild(messageBody)
@@ -246,7 +246,7 @@ function createMessages(selectedMessages) {
 	// }
 };
 
-function setMessageOrign(item) {
+function setMessageOrigin(item) {
 	let text = ''
 	if(item.replied){
 		if(item.time){
@@ -300,7 +300,7 @@ function closeMyDialog() {
 async function createTask() {
 	let taskData = getSelectedValues()
 	let createdTask = await sendActionAsync("createTask", taskData);
-	if(createdTask?.status === 'success') {
+	if(createdTask === 'success') {
 		let sendToApp = document.getElementById('send-to-app')
 		sendToApp.removeEventListener('click', startSendMessagesToApp)
 		sendToApp.innerText = 'Tarefa enviada para o App!'
@@ -324,11 +324,6 @@ async function startSendMessagesToApp() {
         if(!ckbox) return;
         selected.push(item)
     })
-	// teste usando p innerText
-	// for(let i in selected){
-	// 	let message = selected[i].innerText
-	// 	selectedMessages.push(message)
-	// }
   
     for(let i in selected){
 		let message = selected[i].querySelector('.copyable-text')
@@ -367,6 +362,7 @@ async function startSendMessagesToApp() {
 		}
 		selectedMessages.push({time, replied, contactName, contactNumber, messageText, messageImage})
     }
+
     createMessages(selectedMessages)
 	let projectGroup = verifyProject(groupTitle)
 	if(projectGroup) {
@@ -388,24 +384,14 @@ async function startSendMessagesToApp() {
   async function getImages(selectedMessage) {
 	const messageImgs = selectedMessage.querySelectorAll("img");
 	if (messageImgs.length) {
-	  let trueImg = null;
-	  for (const el of messageImgs) {
+		let trueImg = null;
+		for (const el of messageImgs) {
 		if (el.src.startsWith('blob:')) {
-		  trueImg = el.src;
-		  break; // Encontrou uma imagem válida, não é necessário continuar o loop.
+			trueImg = el.src;
+			break; // Encontrou uma imagem válida, não é necessário continuar o loop.
 		}
-	  }
-	return trueImg
-	//if (trueImg) {
-	// 	try {
-	// 	  const base64String = await fetchAndConvertToBase64(trueImg);
-	// 	  const arrayBuffer = await fetchAndConvertToArrayBuffer(trueImg)
-	// 	  return {base64String, arrayBuffer};
-	// 	} catch (error) {
-	// 	  console.error('Erro ao buscar e converter a imagem:', error);
-	// 	  return null;
-	// 	}
-	//   }
+		}
+		return trueImg
 	}
 	return false;
   };
@@ -499,7 +485,6 @@ function verifyProject(groupTitle) {
 
 //fetch image base64
 async function fetchAndConvertToBase64(imageSrc) {
-	debugger
 	try {
 	  const response = await fetch(imageSrc);
 	  if (!response.ok) {
@@ -523,7 +508,6 @@ async function fetchAndConvertToBase64(imageSrc) {
   }
 
   async function fetchAndConvertToArrayBuffer(imageSrc) {
-	debugger
 	try {
 	  const response = await fetch(imageSrc);
 	  if (!response.ok) {
