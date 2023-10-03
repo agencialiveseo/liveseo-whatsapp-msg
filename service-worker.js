@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
             delete message.data.messages
 
             let taskresponse = await createTask(message.data, cookie)
-            //let taskresponse = {status: 'success', id: 1393}
+            
             if(taskresponse.status === 'success'){
                 for(let i in messages) {
                     if(messages[i].messageImage){
@@ -186,7 +186,7 @@ async function fetchAndConvertToArrayBuffer(imageSrc) {
 async function uploadSelectedImages(imageBlob, subtaskId, cookie){
     try {   
         let formImage = new FormData()
-        formImage.append('image', imageBlob);
+        formImage.append('image', imageBlob, 'image.jpg');
         const response = await fetch(`${appUrl}/v1/upload?content_type=subtask&content_id=${subtaskId}`, {
             method: 'POST',
             headers: {
