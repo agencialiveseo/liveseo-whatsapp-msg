@@ -236,14 +236,6 @@ function createMessages(selectedMessages) {
 			messageBody.appendChild(messageImage)
 		}
 	}
-	// teste usando o innerText
-	//
-	// for(let item  of selectedMessages){
-	// 	var messageBody = document.createElement('div')
-	// 	messageBody.innerText = item
-	// 	messageBody.className = 'selected-message'
-	// 	dialog.appendChild(messageBody)
-	// }
 };
 
 function setMessageOrigin(item) {
@@ -263,14 +255,11 @@ function setMessageOrigin(item) {
 function createDialogSelect(options, elementId, name) {
 	var selectElement = document.createElement("select");
 	selectElement.id = name
-	// Use o loop for...of para iterar pelo array de opções
+	
 	for (var option of options) {
-		// Crie um elemento 'option' para cada opção no array
 		var optionElement = document.createElement("option");
 		optionElement.value = option.value
 		optionElement.text = option.text
-
-		// Adicione o elemento 'option' ao elemento 'select'
 		selectElement.appendChild(optionElement);
 	}
 	return selectElement
@@ -278,12 +267,9 @@ function createDialogSelect(options, elementId, name) {
 
 function createTitleInput() {
 	var inputElement = document.createElement('input');
-	// Set the type attribute to "text"
 	inputElement.type = 'text';
 	inputElement.id = 'task-title-input'
-	// Set a placeholder text
 	inputElement.placeholder = 'Título da tarefa';
-	// Set an initial value (optional)
 	inputElement.value = '';
 	return inputElement
 };
@@ -390,7 +376,7 @@ async function startSendMessagesToApp() {
 		for (const el of messageImgs) {
 		if (el.src.startsWith('blob:')) {
 			trueImg = el.src;
-			break; // Encontrou uma imagem válida, não é necessário continuar o loop.
+			break; 
 		}
 		}
 		return trueImg
@@ -439,7 +425,6 @@ function getGroupTitle(){
 	const main = document.getElementById('main')
 	const header = main.getElementsByTagName('header')
 	groupTitle = header[0].querySelector('div:nth-child(2) > div > div > span').innerText
-	// groupTitle = 'CB194 - teste'
 	return groupTitle
 };
 
