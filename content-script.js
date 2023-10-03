@@ -298,6 +298,8 @@ function closeMyDialog() {
 };
 
 async function createTask() {
+	createLoaderClass()
+	changeButtonToLoader()
 	let taskData = getSelectedValues()
 	let createdTask = await sendActionAsync("createTask", taskData);
 	if(createdTask === 'success') {
@@ -529,4 +531,36 @@ async function fetchAndConvertToBase64(imageSrc) {
 	  throw error;
 	}
   }
+
+function createLoaderClass() {
+	let style = document.createElement('style')
+	let styleText = (`
+		.loader {
+			border: 5px solid #f3f3f3; /* Light grey */
+			border-top: 5px solid #3498db; /* Blue */
+			border-radius: 50%;
+			width: 12px;
+			height: 12px;
+			animation: spin 2s linear infinite;
+		}
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}`
+	)
+	style.type = 'text/css'
+	style.appendChild(document.createTextNode(styleText))
+	let head = document.head || document.getElementsByTagName('head')[0]
+	head.appendChild(style)
+}
+
+function changeButtonToLoader(){
+	let close = document.getElementById('close-button')
+	close.style.cssText = 'display:none;'
+	let loader = document.createElement('div')
+	loader.classList.add('loader')
+	let save = document.getElementById('save-button')
+	save.innerText = ''
+	save.appendChild(loader)
+}
   
