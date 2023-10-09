@@ -440,6 +440,7 @@ function getSelectedValues() {
 	var selectedProject = selectedProjectOption.value;
 
 	var project = projects.find(el => el.value == selectedProject)
+	var projectName = project.text
 
 	var selectedService = getSelectdOption("service-select");
 	var selectedRequest = getSelectdOption("request-select");
@@ -454,7 +455,7 @@ function getSelectedValues() {
 			close.style.cssText = 'display: block;'
 			return {
 				title: inputValue, 
-				project: project, 
+				projectName: projectName, 
 				serviceType: selectedService,
 				messages: selectedMessages,
 				requestType: selectedRequest,
