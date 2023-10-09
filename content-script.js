@@ -215,6 +215,7 @@ function createCloseDialog() {
 function createSaveTaskButton() {
 	const closeButton = document.createElement('button')
 	closeButton.id = 'save-button'
+	closeButton.style.cssText = 'display:none;'
 	closeButton.textContent = 'Criar tarefa'
 	closeButton.addEventListener('click', () => createTask())
 	return closeButton
@@ -254,6 +255,7 @@ function setMessageOrigin(item) {
 
 function createDialogSelect(options, elementId, name) {
 	var selectElement = document.createElement("select");
+	selectElement.addEventListener("change", () => getSelectedValues())
 	selectElement.id = name
 	
 	for (var option of options) {
@@ -267,6 +269,7 @@ function createDialogSelect(options, elementId, name) {
 
 function createTitleInput() {
 	var inputElement = document.createElement('input');
+	inputElement.addEventListener("input", () => getSelectedValues())
 	inputElement.type = 'text';
 	inputElement.id = 'task-title-input'
 	inputElement.placeholder = 'Título da tarefa';
@@ -442,14 +445,24 @@ function getSelectedValues() {
 	var selectedRequest = getSelectdOption("request-select");
 	var selectedFrequency = getSelectdOption("frequency-select");
 
-	return {
-		title: inputValue, 
-		project: project, 
-		serviceType: selectedService,
-		messages: selectedMessages,
-		requestType: selectedRequest,
-		frequency: selectedFrequency
-	}
+	if(inputValue != '' && 
+		selectedProject != 'null' && 
+		selectedService != 'null' && 
+		selectedRequest != 'null' && 
+		selectedFrequency != 'null') {
+			let close = document.getElementById('save-button')
+			close.style.cssText = 'display: block;'
+			return {
+				title: inputValue, 
+				project: project, 
+				serviceType: selectedService,
+				messages: selectedMessages,
+				requestType: selectedRequest,
+				frequency: selectedFrequency
+			}
+		} else {
+			return false
+		}
 };
 
 function getSelectdOption(elementId) {
