@@ -168,6 +168,7 @@ waitElementOnScreen(
 
 function createDialog() {
 	const dialog = document.createElement('dialog')
+	dialog.addEventListener('keydown', event => getKeyEvent(event))
 	dialog.id = 'myDialog'
 	dialog.appendChild(createDialogHeader())
 	dialog.appendChild(createDialogBody())
@@ -199,6 +200,7 @@ function createDialogBody() {
 function createDialogFooter() {
 	const footer = document.createElement('footer')
 	footer.id = 'myDialog-footer'
+	footer.style.cssText = 'margin-top: 1rem; align-self: end;'
 	footer.appendChild(createSaveTaskButton())
 	footer.appendChild(createCloseDialog())
 	return footer
@@ -277,6 +279,11 @@ function createTitleInput() {
 	return inputElement
 };
 
+function getKeyEvent(event){
+	const key = event.key
+	if(key === 'Escape') closeMyDialog()
+}
+
 function closeMyDialog() {
 	myDialog.close()
 	var dialog = document.getElementById('myDialog')
@@ -308,6 +315,7 @@ async function createTask() {
 ///////////////////////////
   
 async function startSendMessagesToApp() {
+	debugger
     let itens = document.querySelectorAll("div[role='application'] div[role='row']")
     let selected = [];
     itens.forEach(function(item){
@@ -344,10 +352,11 @@ async function startSendMessagesToApp() {
 				messageImage = await getImages(selected[i])
 			}
 		} else {
-			time = getValuesForImageMessage(selected[i]).time
+			let imageValues = getValuesForImageMessage(selected[i]);
+			time = imageValues.time
 			replied = ''
-			contactName = getValuesForImageMessage(selected[i]).name
-			contactNumber = getValuesForImageMessage(selected[i]).contact
+			contactName = imageValues.name
+			contactNumber = imageValues.contact
 			messageText = ''
 			messageImage = await getImages(selected[i])
 		}
@@ -390,6 +399,11 @@ async function startSendMessagesToApp() {
   function getValuesForImageMessage(selectedMessage) {
 	let message = selectedMessage.innerText
 	let values = message.split('\n')
+	if(values.length < 3){
+		while(values.length < 3){
+			values.push('')
+		}
+	}
 	return {name: values[0], contact: values[1], time: values[2]}
   }
 
@@ -440,7 +454,9 @@ function getSelectedValues() {
 	var selectedProject = selectedProjectOption.value;
 
 	var project = projects.find(el => el.value == selectedProject)
-	var projectName = project.text
+	if(project){
+		var projectName = project.text
+	}
 
 	var selectedService = getSelectdOption("service-select");
 	var selectedRequest = getSelectdOption("request-select");

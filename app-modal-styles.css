@@ -1,6 +1,6 @@
 #myDialog {
     width: 40rem; 
-    height: auto;
+    height: 94vh;
     min-height: 30rem; 
     border: none;
     display: flex;
@@ -10,6 +10,7 @@
 }
 
 #myDialog-header {
+    align-self: start;
     border-radius: 6px;
     padding: 0.5rem;
     background: #343A40;
@@ -19,16 +20,15 @@
 }
 
 #myDialog-body {
-    min-height: 32rem;
+    height: auto;
+    overflow: auto;
+    min-height: 30rem;
     margin-top: 0.5rem;
 }
 
-#myDialog-messages{
-    overflow: auto;
-    height: 23rem;
-}
-
 #myDialog-footer {
+    margin-top: 1rem;
+    align-self: end;
     padding: 0.5rem 0.5rem 0 0.5rem;
     display: flex;
     justify-content: end;
