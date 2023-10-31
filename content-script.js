@@ -315,7 +315,7 @@ async function createTask() {
 ///////////////////////////
   
 async function startSendMessagesToApp() {
-	debugger
+	
     let itens = document.querySelectorAll("div[role='application'] div[role='row']")
     let selected = [];
     itens.forEach(function(item){
