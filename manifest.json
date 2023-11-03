@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "liveSEO Wpp Msg",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Customer service extension for liveSEO users",
     "icons": {
         "16": "icons/icon_16.png",

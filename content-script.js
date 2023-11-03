@@ -259,6 +259,7 @@ function createDialogSelect(options, elementId, name) {
 	var selectElement = document.createElement("select");
 	selectElement.addEventListener("change", () => getSelectedValues())
 	selectElement.id = name
+	selectElement.style.cssText = "color: #000000; background-color: #ffffff;"
 	
 	for (var option of options) {
 		var optionElement = document.createElement("option");
