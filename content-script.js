@@ -126,7 +126,7 @@ chrome.runtime.onConnect.addListener(port => {
     })
 });
 
-const projects = [];
+let projects = [];
 
 const serviceResponsible = [
 	{value: null , text: 'Responsável'},	
@@ -155,8 +155,9 @@ waitElementOnScreen(
 	'#main', 
 	async () => {
 		let loadedProjects = await sendActionAsync("getProjects");
-		projects.push({value: null, text: 'Selecione o projeto'})
 		loadedProjects.forEach(project => projects.push({value: project.id, text: project.name, code: project.code}))
+		projects = projects.sort((a, b) => a.text.localeCompare(b.text))
+		projects.unshift({value: null, text: 'Selecione o projeto'})
 		let newDialog = createDialog()
 		document.getElementById('app').appendChild(newDialog)
 		observeDOM(document.getElementById('app'), () => addMenuOnFooter(document.getElementById('main')))}
