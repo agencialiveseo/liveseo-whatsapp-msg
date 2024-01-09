@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "liveSEO Wpp Msg",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Customer service extension for liveSEO users",
     "icons": {
         "16": "icons/icon_16.png",
@@ -20,8 +20,7 @@
     "permissions": [
         "storage", 
         "cookies",
-        "tabs",
-        "activeTab"
+        "tabs"
     ],
     "host_permissions": [
         "https://app.liveseo.com.br/*",
